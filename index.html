@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link
+    href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700&family=Bellefair&family=Barlow:wght@400;700&display=swap"
+    rel="stylesheet">
+    <style>
+        .main{
+            background-color: rgb(100, 128, 255);
+        }
+        .editable{
+            width: 300px;
+            height: 200px;
+            border: 1px solid #bbb;
+            padding: 15px;
+            overflow-y:auto;
+            background-color: bisque;
+        }
+        input{
+            margin-bottom: 10px;
+        }
+    </style>
+    <title>Chat Room</title>
+</head>
+<body class="main">
+    <form name="publish">
+        <label><b>Chat!</b></label>
+        <div class ="editable" contenteditable="true" id ="messages"></div>
+
+       <div>
+    </div>
+        <div>
+            <b><label>Name</label></b>
+             <input type="text" name = "name" placeholder="enter name">
+        </div>
+        <div>
+            <b><label>Message</label></b>
+            <input type="text" name = "message" placeholder="enter message">
+        </div>
+        <input type = "submit" value = "Send">
+    </form>
+</body>
+</html>
+
+
+
+
+<script>
+    let socket = new WebSocket("ws://localhost:3000/ws")
+
+// send message from the form
+document.forms.publish.onsubmit = function() {
+    // get name
+    let user = this.name.value;
+    if (user == ""){
+        user = "anonymous";
+    }
+    
+    // get message
+  let userMessage = this.message.value;
+  const outgoingMessage = {name: user, message: userMessage }
+
+    // send message
+  socket.send(JSON.stringify(outgoingMessage));
+    // reset input message box
+  this.message.value ="";
+  return false;
+};
+
+
+    // message receive - show the message in div#messages
+    socket.onmessage = function(event) {
+        // parse data from server
+        let data = JSON.parse(event.data)
+        name = data.name
+        msg = data.message
+        // if message is longer than the length of the message box add a line break
+        if (msg.length > 40){
+            msgArray = msg.split("")
+            msg = msgArray.join("")
+        }
+
+        // build message
+        message = name.bold() + ": " + msg;
+        let msgcontainer = document.getElementById('messages')
+        // append message to html message area
+        msgcontainer.innerHTML += message + "<br>"
+
+       // auto scroll if overflow is reached
+       msgcontainer.scrollTop = msgcontainer.scrollHeight;
+    };
+</script>
